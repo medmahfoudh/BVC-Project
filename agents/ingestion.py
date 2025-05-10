@@ -30,7 +30,7 @@ def load_and_chunk(directory: str = "data/reports") -> list[Document]:
         )
 
         # split on blank lines (paragraphs)
-        paras = [p.strip() for p in raw.split("\n\n") if p.strip()]
+        paras = [p.strip() for p in raw.split("\n") if p.strip()]
         for para in paras:
             docs.append(Document(content=para, meta={"source": path.name}))
     return docs
@@ -47,7 +47,7 @@ def ingest_pipeline(directory: str = "data/reports"):
     print(f"📝 Prepared {len(documents)} Document chunks.")
 
     store = InMemoryDocumentStore()
-    store.write_documents(documents)
+    store.write_documents(documents,None)
     print("✅ Ingestion complete — your DocumentStore is ready!")
 
     # Return BOTH so you can inspect the raw list easily
