@@ -2,6 +2,10 @@ import fitz  # PyMuPDF
 import json
 import re
 import os
+from pathlib import Path
+from haystack import Document
+
+
 
 def extract_section(text, start_marker, end_marker=None):
     start = text.find(start_marker)
@@ -54,6 +58,50 @@ def extract_detailed_chunks(pdf_path):
     print(text)
     return chunks
 
+
+### Utils ###
+def listFromJson(path):
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)  # data is a dict
+
+    # Convert dict values to a list (e.g., all chunks)
+    chunks_list = [f"{key} : {value}" for key, value in data.items()]
+    return chunks_list
+
+def extract_text_from_JSON(path):
+    # Load the JSON file
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)  # This will be a dictionary
+
+    # Convert to a single concatenated string (including keys)
+    concatenated_string = "\n\n".join(
+        f"{key}:\n{value}" for key, value in data.items())
+    return concatenated_string
+
+
+def loadChunksFromJson(directory: str = "data/reports/json") -> list[Document]:
+    directory = "data/reports/json"
+    docs = []
+    for path in Path(directory).iterdir():
+        if not path.is_file():
+            continue
+        """    
+        raw = (
+            extract_text_from_JSON(str(path))
+            if path.suffix.lower() == ".json"
+            else path.read_text(encoding="utf-8", errors="ignore")
+        )
+
+        # split on blank lines (paragraphs)
+        paras = [p.strip() for p in raw.split("\",") if p.strip()]
+        for para in paras:
+            docs.append(Document(content=para, meta={"source": path.name}))
+        """
+        chunksFromJson = listFromJson(str(path))    
+        for itemFromJson in chunksFromJson:
+            docs.append(Document(content=itemFromJson, meta={"source": path.name}))
+            
+    return docs
 
 def main():
     #pdf_path = os.path.join("..", "data","reports", "VisitReport_Fantasiefirma.pdf")
