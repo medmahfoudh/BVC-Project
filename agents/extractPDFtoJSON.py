@@ -54,14 +54,19 @@ def extract_detailed_chunks(pdf_path):
     print(text)
     return chunks
 
-# Run this part
-if __name__ == "__main__":
-   #pdf_path = os.path.join("..", "data","reports", "VisitReport_Fantasiefirma.pdf")
+
+def main():
+    #pdf_path = os.path.join("..", "data","reports", "VisitReport_Fantasiefirma.pdf")
     pdf_path = "D:\BVC-Project/data/reports/Visit Report_4.pdf"  # Adjust path if needed
     chunks = extract_detailed_chunks(pdf_path)
 
     # Save to JSON
-    with open("visit_report_chunks.json", "w", encoding="utf-8") as f:
+    with open("./data/reports/visit_report_chunks.json", "w", encoding="utf-8") as f:
         json.dump(chunks, f, indent=2, ensure_ascii=False)
 
     print("✅ Data saved to visit_report_chunks.json")
+    return returnAsString()
+    
+# Run this part
+if __name__ == "__main__":
+    main()
