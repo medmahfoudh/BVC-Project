@@ -10,7 +10,7 @@ from langchain_ollama import OllamaLLM
 import pandas as pd
 
 # Page Title
-st.title("Q&A Agent")
+st.title("Report Summarization Agent")
 
 embedding_model = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 
@@ -78,8 +78,6 @@ if submit_btn:
         for chunk in llm.stream(prompt):
             output_text += chunk
             placeholder.markdown(f"""{output_text}""")
-    elif submit_btn != "":
-        st.write("Please enter a valid query.")
     else:
         st.write("Unfortunately, I wasn’t able to find relevant data in my database to provide an accurate answer to your prompt. Please try again with a different prompt.")
 
