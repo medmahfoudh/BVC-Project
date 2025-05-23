@@ -57,8 +57,8 @@ if submit_btn:
     # if there are relevant chunks, generate the prompt and display the response
     if len(filtered_results) > 0:
         # for debugging
-        st.write(f"Number of relevant chunks: {len(filtered_results)}")
-        st.write(filtered_results)
+        # st.write(f"Number of relevant chunks: {len(filtered_results)}")
+        # st.write(filtered_results)
 
         context = "\n".join([result.payload["page_content"] for result in filtered_results])
         prompt = f"""
@@ -78,7 +78,7 @@ if submit_btn:
         for chunk in llm.stream(prompt):
             output_text += chunk
             placeholder.markdown(f"""{output_text}""")
-    elif submit_btn != "":
+    elif query == "":
         st.write("Please enter a valid query.")
     else:
         st.write("Unfortunately, I wasn’t able to find relevant data in my database to provide an accurate answer to your prompt. Please try again with a different prompt.")
