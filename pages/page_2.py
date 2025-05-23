@@ -8,9 +8,13 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType
 from qdrant_client.http import models
 import re
+import pandas as pd
 
 # Page Title
 st.title("Upload a new reprot to the database")
+
+# read the company names file
+company_names = pd.read_excel("data/company_names.xlsx")
 
 # read pdf file
 pdf = st.file_uploader("Upload a file", type=["pdf"])
@@ -60,7 +64,7 @@ if upload_btn:
 
     # embed the chunks in to vectors
     #  embedding_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2") # only supports english
-    embedding_model = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+    embedding_model = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2") # can support multiple languages, German in particular
 
     collection_name="crm_reports_rag"
 
@@ -92,13 +96,20 @@ if upload_btn:
     points, next_page = client.scroll(collection_name=collection_name, with_payload=True)
     doc_ids = [point.payload["metadata"]["doc_id"] for point in points]
 
-    # st.write(filtered_vectors)
-
     # If the report exists, don't add
     if doc_id in doc_ids:
         st.write(f"❌ Error: the report with ID '{doc_id}' already exists in database!")
     else:
         # Store the document chunks
         qdrant.add_documents(chunks)
+        
+        # update the company names locally
+        new_company_name = pd.DataFrame([{"company_name": company_name.strip()}])
+        if len(company_names) == 0:
+            company_names = new_company_name.copy()
+        else:
+            company_names = pd.concat([company_names, new_company_name], ignore_index=True).drop_duplicates(["company_name"])
+        company_names.to_excel("data/company_names.xlsx", index=False)
+
         st.write("✅ Your report has been uploaded to the database!")
 
