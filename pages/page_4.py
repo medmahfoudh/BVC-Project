@@ -22,17 +22,16 @@ client = QdrantClient(
 # extract company names from database
 # points, next_page = client.scroll(collection_name=collection_name, with_payload=True)
 # company_names = [point.payload["metadata"]["company_name"] for point in points]
-company_names = pd.read_excel("data/company_names.xlsx")
+company_names = pd.read_excel("data/report_details.xlsx")
 
 selected_company = st.selectbox("Select a company:", set(company_names['company_name']))
 selected_country = st.selectbox("Select a country:", ["Germany", "Austria", "Switzerland"])
-query = st.text_input("Enter your query here:")
-submit_btn = st.button("Submit")
+query = "Please highlight the risks and Opportunities in this visit" #st.text_input("Enter your query here:")
+submit_btn = st.button("Get Risks and Opportunities")
 
 if submit_btn:
     # embed the query
     query_vector = embedding_model.embed_query(query)
-
     collection_name="crm_reports_rag"
 
     # # create payload index
@@ -49,9 +48,11 @@ if submit_btn:
         limit=5,
         query_filter=Filter(must=[FieldCondition(key="metadata.company_name", match=MatchValue(value=selected_company))])
     )
+    print(results)
+
     
     # filter out results with low scores
-    score_threshold = 0.4
+    score_threshold = 0.09
     filtered_results = [r for r in results if r.score >= score_threshold]
 
     # if there are relevant chunks, generate the prompt and display the response
@@ -80,7 +81,6 @@ if submit_btn:
             placeholder.markdown(f"""{output_text}""")
     else:
         st.write("Unfortunately, I wasn’t able to find relevant data in my database to provide an accurate answer to your prompt. Please try again with a different prompt.")
-
 
 
 
