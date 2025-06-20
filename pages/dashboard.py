@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ─────────────────────────────────────────────────────
 # Inject custom CSS for metric styling
@@ -61,7 +61,7 @@ st.markdown("""
     }
 
     .text-green { color: #4CAF50 !important; }
-    .text-red { color: #FF6B6B !important; }
+    .text-red { color: #FF3F33 !important; }
     .text-orange { color: #FFA500 !important; }
     .text-gray { color: #333 !important; }
 
@@ -153,6 +153,32 @@ with c_full:
         </div>
     """, unsafe_allow_html=True)
 
+# Third row: two new metrics below Next Action
+v1, v2 = st.columns(2)
+
+with v1:
+    st.markdown(f"""
+        <div class='metric-card card-large'>
+            <div class='metric-title'>Planned Visits</div>
+            <div class='metric-value'>26.06.2025</div>
+            <div class='metric-value'>14.07.2025</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# Calculate visit_completed_last_30_days
+today = datetime.now()
+past_30_days = today - timedelta(days=30)
+recent_visits = company_data[pd.to_datetime(company_data['report_date'], dayfirst=True) >= past_30_days].shape[0]
+
+with v2:
+    st.markdown(f"""
+        <div class='metric-card card-large'>
+            <div class='metric-title'>Visits Completed (Last 30 Days)</div>
+            <div class='metric-value'>{recent_visits}</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────
@@ -174,15 +200,19 @@ metrics = {
 
 def get_color_class(metric_type, value):
     if metric_type == "customer":
-        v = value.lower()
-        if "very satisfied" in v or "satisfied" in v:
+        v = value.lower().strip()
+        if v == "very satisfied":
             return "text-green"
-        elif "not" in v or "bad" in v:
+        elif v == "satisfied":
+            return "text-green"
+        elif v == "not satisfied" or "bad" in v:
             return "text-red"
-        elif "no feedback" in v:
+        elif v == "no feedback":
             return "text-orange"
+        else:
+            return "text-gray"
     elif metric_type == "risk":
-        v = value.lower()
+        v = value.lower().strip()
         if "low" in v:
             return "text-green"
         elif "moderate" in v:
@@ -190,6 +220,7 @@ def get_color_class(metric_type, value):
         elif "high" in v:
             return "text-red"
     return "text-gray"
+
 
 # First row: 4 metrics
 d1, d2, d3, d4 = st.columns(4)

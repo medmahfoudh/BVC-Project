@@ -10,13 +10,13 @@ from langchain_ollama import OllamaLLM
 import pandas as pd
 
 # Page Title
-st.title("Potential Opportunities Agent")
+st.title("IntelSignal")
 
 embedding_model = SentenceTransformerEmbeddings(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 
 client = QdrantClient(
-    url="https://88557973-d9d3-4a8e-a92b-a877815aff1f.eu-central-1-0.aws.cloud.qdrant.io:6333",
-    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.hTkGVX7aVObKDCE9iB9HBi_Cq_oBJgPJhmQEkqE9LeI"
+    url="https://94d74b83-c25c-4b39-b117-9aec9a65db4c.us-east4-0.gcp.cloud.qdrant.io",
+    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.Lt2YQ-IAfyBJAbRK6F2IxjnojnKSm72ENq-4z7-wqZY"
 )
 
 # extract company names from database
@@ -32,7 +32,7 @@ submit_btn = st.button("Get Risks and Opportunities")
 if submit_btn:
     # embed the query
     query_vector = embedding_model.embed_query(query)
-    collection_name="crm_reports_rag"
+    collection_name="wieland_reports"
 
     # # create payload index
     # client.create_payload_index(
@@ -58,8 +58,8 @@ if submit_btn:
     # if there are relevant chunks, generate the prompt and display the response
     if len(filtered_results) > 0:
         # for debugging
-        st.write(f"Number of relevant chunks: {len(filtered_results)}")
-        st.write(filtered_results)
+        # st.write(f"Number of relevant chunks: {len(filtered_results)}")
+        # st.write(filtered_results)
 
         context = "\n".join([result.payload["page_content"] for result in filtered_results])
         prompt = f"""
@@ -70,15 +70,16 @@ if submit_btn:
         """
 
         # prompt LLM and display the response
-        placeholder = st.empty()
-        output_text = ""
+        with st.spinner("Please wait while we retrieve opportunities and risks..."):
+            placeholder = st.empty()
+            output_text = ""
 
-        # "localhost:11434"
-        llm = OllamaLLM(model="mistral")
-        # llm.invoke("The first man on the moon was ...")
-        for chunk in llm.stream(prompt):
-            output_text += chunk
-            placeholder.markdown(f"""{output_text}""")
+            # "localhost:11434"
+            llm = OllamaLLM(model="mistral")
+            # llm.invoke("The first man on the moon was ...")
+            for chunk in llm.stream(prompt):
+                output_text += chunk
+                placeholder.markdown(f"""{output_text}""")
     else:
         st.write("Unfortunately, I wasn’t able to find relevant data in my database to provide an accurate answer to your prompt. Please try again with a different prompt.")
 

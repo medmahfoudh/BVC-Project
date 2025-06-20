@@ -10,7 +10,7 @@ from langchain_ollama import OllamaLLM
 import pandas as pd
 
 # Page Title
-st.title("Q&A Agent")
+st.title("IntelAsk")
 
 # extract company names from database
 # points, next_page = client.scroll(collection_name=collection_name, with_payload=True)
@@ -27,8 +27,8 @@ embedding_model = SentenceTransformerEmbeddings(model_name="paraphrase-multiling
 
 # instantiate the qdrant client object
 client = QdrantClient(
-    url="https://88557973-d9d3-4a8e-a92b-a877815aff1f.eu-central-1-0.aws.cloud.qdrant.io:6333",
-    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.hTkGVX7aVObKDCE9iB9HBi_Cq_oBJgPJhmQEkqE9LeI"
+    url="https://94d74b83-c25c-4b39-b117-9aec9a65db4c.us-east4-0.gcp.cloud.qdrant.io",
+    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.Lt2YQ-IAfyBJAbRK6F2IxjnojnKSm72ENq-4z7-wqZY"
 )
 
 if submit_btn:
@@ -36,7 +36,7 @@ if submit_btn:
         # embed the query
         query_vector = embedding_model.embed_query(query)
 
-        collection_name="crm_reports_rag"
+        collection_name="wieland_reports"
 
         # # create payload index
         # client.create_payload_index(

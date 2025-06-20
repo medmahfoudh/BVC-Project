@@ -24,8 +24,8 @@ if not COMPANY_FILE.exists():
 
 # Initialize Qdrant and models
 client = QdrantClient(
-    url="https://88557973-d9d3-4a8e-a92b-a877815aff1f.eu-central-1-0.aws.cloud.qdrant.io:6333",
-    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.hTkGVX7aVObKDCE9iB9HBi_Cq_oBJgPJhmQEkqE9LeI"
+    url="https://94d74b83-c25c-4b39-b117-9aec9a65db4c.us-east4-0.gcp.cloud.qdrant.io",
+    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.Lt2YQ-IAfyBJAbRK6F2IxjnojnKSm72ENq-4z7-wqZY"
 )
 embedding_model = SentenceTransformerEmbeddings(
     model_name="paraphrase-multilingual-MiniLM-L12-v2"
@@ -42,7 +42,7 @@ def save_companies(df: pd.DataFrame, path: Path = COMPANY_FILE) -> None:
 def get_context(company: str, top_k: int = 3) -> str:
     query_vector = embedding_model.embed_query(company)
     results = client.search(
-        collection_name="crm_reports_rag",
+        collection_name="wieland_reports",
         query_vector=query_vector,
         limit=top_k,
         query_filter=Filter(
@@ -54,58 +54,93 @@ def get_context(company: str, top_k: int = 3) -> str:
     )
     return "\n".join([pt.payload.get("page_content", "") for pt in results])
 
-def compute_all_metrics():
+def compute_all_metrics(report_id=None):
     df = load_companies()
+
+    if report_id:
+        df = df[df["report_id"].fillna("") == report_id] # Only new row
+
     contexts = {c: get_context(c) for c in df["company_name"].unique()}
 
     records = []
-    for comp in df["company_name"]:
+    for _, row in df.iterrows():
+        comp = row["company_name"]
         ctx = contexts[comp]
         prompt = f"""
-You are a precise assistant. Based ONLY on the context below, extract five business intelligence metrics for the company: {comp}.
+        You are a multilingual AI assistant helping extract business metrics.
 
-Context:
-{ctx}
+        Given ONLY the context below, extract 5 intelligence values for the company: {comp}.
 
----
-INSTRUCTIONS:
-Return exactly FIVE values, separated by "|||". Do NOT add labels, bullet points, or explanations.
+        ---
+        Context:
+        {ctx}
 
-Strict format:
-1. Customer Satisfaction: one of these phrases — "Very Satisfied", "Satisfied", "Not Satisfied", "Very Bad"
-2. Opportunity Index: exactly two short sentences.
-3. Risk Score: one short phrase like "Low Risk", "Moderate Risk", or "High Risk"
-4. Forecast Accuracy: percentage or short phrase (e.g., "82%" or "Uncertain")
-5. Urgent Signals: exactly two words only.
+        ---
+        Instructions:
+        - Output must be a SINGLE line with 5 values, separated by `|||`
+        - No labels, no bullets, no line breaks
+        - Output everything in **English**
+        - Do NOT return "Customer Satisfaction:" or "Urgent Signals:" — just the values
 
-Return only this one line:
-<value1> ||| <value2> ||| <value3> ||| <value4> ||| <value5>
-"""
+        Format:
+        <customer_satisfaction> ||| <opportunity_index> ||| <risk_score> ||| <forecast_accuracy> ||| <urgent_signals>
+
+        Example:
+        Satisfied ||| Expand into packaging, New supplier identified ||| Moderate Risk ||| 87% ||| High price, Delay
+
+        Now extract and return your values in exactly that format:
+        """
+
         output = ""
         for chunk in llm.stream(prompt):
             output += chunk
-        parts = [x.strip() for x in output.strip().split("|||")]
-        parts = (parts + [None] * 5)[:5]  # Ensure 5 elements
-        records.append(parts)
+        print(f"[LLM raw output] {output}")
 
-    cols = [
+        # Make sure the output is 1 line with 5 parts
+        raw_line = output.strip().splitlines()[0]
+        parts = [x.strip().replace('"', '') for x in raw_line.split("|||")]
+        parts = (parts + [None] * 5)[:5]  # ensure exactly 5
+
+
+
+        records.append((row["report_id"], *parts))
+
+    metrics_df = pd.DataFrame(records, columns=[
+        "report_id",
         "customer_satisfaction",
         "opportunity_index",
         "risk_score",
         "forecast_accuracy",
         "urgent_signals"
-    ]
+    ])
 
-    metrics_df = pd.DataFrame(records, columns=cols)
+    # Load and normalize the full Excel sheet
+    full_df = load_companies()
 
-    for col in cols:
-        if col in df.columns:
-            df[col] = metrics_df[col]
+    # Ensure all metric columns exist in full_df
+    for col in metrics_df.columns[1:]:
+        if col not in full_df.columns:
+            full_df[col] = ""
+
+    # Normalize report_id formats in both DataFrames
+    metrics_df["report_id"] = metrics_df["report_id"].astype(str).str.strip().str.replace(".0", "", regex=False)
+    full_df["report_id"] = full_df["report_id"].astype(str).str.strip().str.replace(".0", "", regex=False)
+
+    # Apply updates row-by-row
+    for idx, row in metrics_df.iterrows():
+        rid = row["report_id"]
+        mask = full_df["report_id"] == rid
+        if mask.any():
+            for col in metrics_df.columns[1:]:
+                full_df.loc[mask, col] = row[col]
         else:
-            df[col] = metrics_df[col]
+            print(f"⚠️ Warning: Report ID not found in full_df: {rid}")
 
-    save_companies(df)
-    print("✅ Metrics updated in report_details.xlsx")
+    # Save the updated file
+    save_companies(full_df)
+    print("✅ Metrics updated for:", report_id if report_id else "ALL")
+
+
 
 if __name__ == "__main__":
     compute_all_metrics()
