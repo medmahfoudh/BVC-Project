@@ -2,8 +2,21 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.db
-*.sqlite3
 .env
+venv/
+.env.*
+.ipynb_checkpoints
 *.log
-data/report_details_backup.xlsx
+*.db
+*.sqlite
+*.pdf
+
+# Cache/data
+*.cache/
+*.egg-info/
+build/
+dist/
+
+# Model weights
+ollama/models/*
+!ollama/models/mistral

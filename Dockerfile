@@ -1,23 +1,37 @@
-FROM python:3.11-slim
+FROM ubuntu:22.04
 
-# Install basic system tools
+# 1. Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
     curl \
+    wget \
+    gnupg \
+    software-properties-common \
+    git \
+    python3 \
+    python3-pip \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
+# 2. Install Ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Copy all project files
+# 3. Download mistral model
+# Download will happen in entrypoint
+# RUN ollama pull mistral
+
+# 4. Set up app directory
+WORKDIR /app
 COPY . /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# 5. Install Python dependencies
+RUN pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir --ignore-installed -r requirements.txt
 
-# Expose Streamlit default port
+# 6. Expose default Streamlit port
 EXPOSE 8501
 
-# Launch Streamlit app
-CMD ["streamlit", "run", "streamlit_app.py", "--server.address=0.0.0.0"]
+# 7. Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
 
+# 8. Start Ollama and Streamlit app
+ENTRYPOINT ["/app/entrypoint.sh"]

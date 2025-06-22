@@ -2,7 +2,7 @@ import streamlit as st
 
 # 1️⃣ This must come first, before any st.* calls:
 st.set_page_config(
-    page_title="InetFlow",
+    page_title="IntelFlow",
     page_icon="🛠️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -38,7 +38,7 @@ st.markdown(
 
 # Navigation pages
 pg = st.navigation([
-    st.Page("pages/Dashboard.py",        title="Dashboard",                    icon="📊"),
+    st.Page("pages/dashboard.py",        title="Dashboard",                    icon="📊"),
     st.Page("pages/IntelAsk.py",           title="IntelAsk",                    icon="💬"),
     st.Page("pages/IntelBrief.py",           title="IntelBrief",   icon="📝"),
     st.Page("pages/IntelSignal.py",           title="IntelSignal",icon="📈"),

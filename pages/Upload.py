@@ -9,7 +9,7 @@ from qdrant_client.models import VectorParams, Distance
 from langchain_ollama import OllamaLLM
 import re
 import pandas as pd
-from pages.analytics import compute_all_metrics # <-- import analytics function
+from backend.analytics import compute_all_metrics # <-- import analytics function
 from datetime import datetime, timedelta
 
 # Load existing report details
