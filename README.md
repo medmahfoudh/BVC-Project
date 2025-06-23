@@ -39,6 +39,14 @@ docker run -p 8501:8501 -v ollama-models:/root/.ollama/models wieland-app
 
 **Windows CMD:**
 
+**🔰 First-time use (initial download of the `mistral` model):**
+On first run, use this command **without volume mounting** so that the model can download properly:
+
+```bash
+docker run -p 8501:8501 wieland-app 
+```
+**To avoid re-downloading the model on future runs, use volume mounting to persist the model cache:**
+
 ```cmd
 docker run -p 8501:8501 -v ollama-models:/root/.ollama/models wieland-app
 ```
